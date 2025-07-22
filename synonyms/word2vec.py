@@ -30,7 +30,7 @@ else:
 
 from .utils import smart_open, to_unicode, cosine
 from numpy import dot, zeros, dtype, float32 as REAL,\
-    double, array, vstack, fromstring, sqrt, newaxis,\
+    double, array, vstack, frombuffer, sqrt, newaxis,\
     ndarray, sum as np_sum, prod, ascontiguousarray,\
     argmax
 from sklearn.neighbors import KDTree
@@ -172,7 +172,7 @@ class KeyedVectors():
                             word.append(ch)
                     word = to_unicode(
                         b''.join(word), encoding=encoding, errors=unicode_errors)
-                    weights = fromstring(fin.read(binary_len), dtype=REAL)
+                    weights = frombuffer(fin.read(binary_len), dtype=REAL)
                     add_word(word, weights)
             else:
                 for line_no in xrange(vocab_size):
