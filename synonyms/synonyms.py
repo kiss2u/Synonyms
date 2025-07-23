@@ -113,6 +113,8 @@ def _load_stopwords(file_path):
     for w in stopwords:
         _stopwords.add(any2unicode(w).strip())
 
+    words.close()
+
 print(">> Synonyms on loading stopwords [%s] ..." % _fin_stopwords_path)
 _load_stopwords(_fin_stopwords_path)
 
