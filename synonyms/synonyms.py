@@ -17,7 +17,7 @@ from __future__ import division
 __copyright__ = "Copyright (c) (2017-2023) Chatopera Inc. All Rights Reserved"
 __author__ = "Hu Ying Xi<>, Hai Liang Wang<hai@chatopera.com>"
 __date__ = "2020-09-24"
-__version__ = "3.23.6"
+__version__ = "3.24.0"
 
 import os
 import sys
@@ -44,12 +44,14 @@ ENVIRON = os.environ.copy()
 import json
 import gzip
 import shutil
+from os.path import relpath
 from .word2vec import KeyedVectors
 from .utils import any2utf8
 from .utils import any2unicode
 from .utils import sigmoid
 from .utils import cosine
 from .utils import is_digit
+import jieba
 from jieba import posseg, analyse
 from chatoperastore import download_licensedfile, LicensedfileDownloadException
 
@@ -88,15 +90,20 @@ print(" ********************************\n")
 '''
 tokenizer settings
 '''
+tokenizer_dict_big = relpath(os.path.join(curdir, 'data', 'dict.txt.big'), os.getcwd())
+print("[Synonyms] set jieba big dict with path %s" % tokenizer_dict_big)
+jieba.set_dictionary(tokenizer_dict_big)
+
 tokenizer_dict = os.path.join(curdir, 'data', 'vocab.txt')
 if "SYNONYMS_WORDSEG_DICT" in ENVIRON:
     if os.path.exists(ENVIRON["SYNONYMS_WORDSEG_DICT"]):
-        print("info: set wordseg dict with %s" % tokenizer_dict)
+        print("[Synonyms] info: set wordseg dict with %s" % tokenizer_dict)
         tokenizer_dict = ENVIRON["SYNONYMS_WORDSEG_DICT"]
-    else: print("warning: can not find dict at [%s]" % tokenizer_dict)
+    else: print("[Synonyms] warning: can not find dict at [%s]" % tokenizer_dict)
 
-print(">> Synonyms load wordseg dict [%s] ... " % tokenizer_dict)
+print("[Synonyms] load wordseg dict [%s] ... " % tokenizer_dict)
 posseg.initialize(tokenizer_dict)
+
 
 # stopwords
 _fin_stopwords_path = os.path.join(curdir, 'data', 'stopwords.txt')
