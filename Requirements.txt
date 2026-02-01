@@ -1,1 +1,1 @@
-synonyms>=3.23
+synonyms>=3.25

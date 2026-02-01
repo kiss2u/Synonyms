@@ -17,7 +17,7 @@ from __future__ import division
 __copyright__ = "Copyright (c) (2017-2023) Chatopera Inc. All Rights Reserved"
 __author__ = "Hu Ying Xi<>, Hai Liang Wang<hai@chatopera.com>"
 __date__ = "2020-09-24"
-__version__ = "3.24.0"
+__version__ = "3.25.1"
 
 import os
 import sys
@@ -58,10 +58,10 @@ from chatoperastore import download_licensedfile, LicensedfileDownloadException
 '''
 globals
 '''
+STOPWORDS = set()
 _vocab = dict()
 _size = 0
 _vectors = None
-_stopwords = set()
 _cache_nearby = dict()
 _debug = False
 
@@ -74,7 +74,8 @@ lambda fns
 # combine similarity scores
 _similarity_smooth = lambda x, y, z, u: (x * y) + z - u
 _flat_sum_array = lambda x: np.sum(x, axis=0)  # 分子
-_logging_debug = lambda x: print(">> Synonyms DEBUG %s" % x) if _debug else None
+logging_debug = lambda x: print(">> Synonyms DEBUG %s" % x) if _debug else None
+logging_info = lambda x: print(">> Synonyms INFO %s" % x)
 
 '''
 Sponsorship
@@ -111,14 +112,14 @@ def _load_stopwords(file_path):
     '''
     load stop words
     '''
-    global _stopwords
+    global STOPWORDS
     if sys.version_info[0] < 3:
         words = open(file_path, 'r')
     else:
         words = open(file_path, 'r', encoding='utf-8')
     stopwords = words.readlines()
     for w in stopwords:
-        _stopwords.add(any2unicode(w).strip())
+        STOPWORDS.add(any2unicode(w).strip())
 
     words.close()
 
@@ -154,7 +155,7 @@ if "SYNONYMS_WORD2VEC_BIN_MODEL_ZH_CN" in ENVIRON:
     _f_model = ENVIRON["SYNONYMS_WORD2VEC_BIN_MODEL_ZH_CN"]
     _download_model = False
 
-def _load_w2v(model_file=_f_model, binary=True):
+def load_w2v(model_file=_f_model, binary=True):
     '''
     load word2vec model
     '''
@@ -180,7 +181,7 @@ def _load_w2v(model_file=_f_model, binary=True):
     return KeyedVectors.load_word2vec_format(
         model_file, binary=binary, unicode_errors='ignore')
 print(">> Synonyms on loading vectors [%s] ..." % _f_model)
-_vectors = _load_w2v(model_file=_f_model)
+_vectors = load_w2v(model_file=_f_model)
 
 def _get_wv(sentence, ignore=False):
     '''
@@ -191,10 +192,10 @@ def _get_wv(sentence, ignore=False):
     vectors = []
     for y in sentence:
         y_ = any2unicode(y).strip()
-        if y_ not in _stopwords:
+        if y_ not in STOPWORDS:
             syns = nearby(y_)[0]
-            _logging_debug("sentence %s word: %s" %(sentence, y_))
-            _logging_debug("sentence %s word nearby: %s" %(sentence, " ".join(syns)))
+            logging_debug("sentence %s word: %s" %(sentence, y_))
+            logging_debug("sentence %s word nearby: %s" %(sentence, " ".join(syns)))
             c = []
             try:
                 c.append(_vectors.word_vec(y_))
@@ -202,7 +203,7 @@ def _get_wv(sentence, ignore=False):
                 if ignore:
                     continue
                 else:
-                    _logging_debug("not exist in w2v model: %s" % y_)
+                    logging_debug("not exist in w2v model: %s" % y_)
                     # c.append(np.zeros((100,), dtype=float))
                     random_state = np.random.RandomState(seed=(hash(y_) % (2**32 - 1)))
                     c.append(random_state.uniform(low=-10.0, high=10.0, size=(100,)))
@@ -387,12 +388,12 @@ def compare(s1, s2, seg=True, ignore=False, stopwords=False):
 
     # check stopwords
     if not stopwords:
-        global _stopwords
+        global STOPWORDS
         for x in s1: 
-            if not x in _stopwords:
+            if not x in STOPWORDS:
                 s1_words.append(x)
         for x in s2:
-            if not x in _stopwords:
+            if not x in STOPWORDS:
                 s2_words.append(x)
     else:
         s1_words = s1 
